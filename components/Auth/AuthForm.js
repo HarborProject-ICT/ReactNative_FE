@@ -83,7 +83,7 @@ function AuthForm({ isLogin, onSubmit, credentialsInvalid }) {
           />
         )}
         {!isLogin && (
-            <Text style={{color: 'white'}}>* 최초 가입 시 자동 로그인됩니다.</Text>
+            <Text style={{color: 'black'}}>* 최초 가입 시 자동 로그인됩니다.</Text>
         )}
         <View style={styles.buttons}>
           <Button onPress={submitHandler}>

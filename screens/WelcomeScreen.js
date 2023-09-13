@@ -60,7 +60,7 @@ const WelcomeScreen = () => {
         {cargoList.map((cargo, index) => (
         <View style={styles.inContainer}>
             <View style={styles.textContainer}>
-                <Text style={styles.freigtText}>{cargo.name}</Text>
+                <Text style={styles.freigtText} key={cargo.name}>{cargo.name}</Text>
                 <View style={{marginTop : 40}}>
                     <Text style={styles.aboutfreigtText}>선박 : {cargo.ship}</Text>
                     <Text style={styles.aboutfreigtText}>하역사 : {cargo.port}</Text>

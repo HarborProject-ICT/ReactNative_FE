@@ -4,12 +4,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+
 import MainScreen from './screens/MainScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import WelcomeScreen from './screens/WelcomeScreen';
 import ReserveScreen from './screens/ReserveScreen';
 import MyPageScreen from './screens/MyPageScreen';
+import MapScreen from './screens/MapScreen';
+
 import { Colors } from './constants/styles';
 import AuthContextProvider, { AuthContext } from './store/auth-context';
 import IconButton from './components/ui/IconButton';
@@ -21,13 +24,12 @@ import { Text } from 'react-native';
   
 const Stack = createNativeStackNavigator();
 
-const userEmail = getUserEmail();
 
 function AuthStack() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.primary500 },
+        headerStyle: { backgroundColor: '#7198F4' },
         headerTintColor: 'white',
         contentStyle: { backgroundColor: Colors.primary100 },
       }}
@@ -50,7 +52,7 @@ function AuthenticatedStack() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.primary500 },
+        headerStyle: { backgroundColor: '#7198F4' },
         headerTintColor: 'white',
         contentStyle: { backgroundColor: Colors.primary100 },
       }}
@@ -72,9 +74,10 @@ function AuthenticatedStack() {
           />
         ),
         headerTitle: ({ tintColor }) => (
-          <Text style={{color: tintColor, fontSize : 25}}>{userEmail}</Text>
+          <Text style={{color: tintColor, fontSize : 25}}>{getUserEmail()}</Text>
         ),
       }}/>
+      <Stack.Screen name="내비게이션" component={MapScreen}/>
     </Stack.Navigator>
   );
 }

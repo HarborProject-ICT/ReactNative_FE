@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { getUserEmail, firestore } from '../firebaseConfig';
 
+
 const ReserveScreen = ({ route }) => {
 
   const navigation = useNavigation();
@@ -85,7 +86,7 @@ const ReserveScreen = ({ route }) => {
        const saveSelectedCargo = async (userEmail, selectedCargoObj) => {
         try {
           // userEmail을 사용하여 해당 사용자의 컬렉션에 데이터를 추가
-          await firestore.collection('users').doc(userEmail).collection('cargos').add({
+          await firestore.collection('users').doc(userEmail).update({
             cargoName: selectedCargoObj.name,
             cargoPort: selectedCargoObj.port,
             cargoShip: selectedCargoObj.ship,
@@ -156,7 +157,7 @@ const ReserveScreen = ({ route }) => {
     );
   };
   
- 
+  
   
 
 

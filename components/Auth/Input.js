@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   label: {
-    color: 'white',
+    color: 'black',
     marginBottom: 4,
   },
   labelInvalid: {

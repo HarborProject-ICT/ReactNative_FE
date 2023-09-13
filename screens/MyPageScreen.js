@@ -1,8 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, ScrollView, FlatList } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../store/auth-context';
 import { getUserEmail, firestore } from '../firebaseConfig';
+import { Feather } from '@expo/vector-icons'; 
+import { useNavigation } from '@react-navigation/native';
 
 const MyPageScreen = ({ route }) => {
     //const { cargo } = route.params;
@@ -22,28 +24,38 @@ const MyPageScreen = ({ route }) => {
     useEffect(() => {
       if (userEmail) {
         // Firebase Firestore에서 cargos 컬렉션 데이터 가져오기
-        const cargoCollectionRef = firestore.collection('users').doc(userEmail).collection('cargos');
-  
-        cargoCollectionRef.get()
-          .then((querySnapshot) => {
-            const cargoList = [];
-            querySnapshot.forEach((doc) => {
-              const cargoData = doc.data();
-              cargoList.push(cargoData);
-            });
-            setCargos(cargoList);
-          })
-          .catch((error) => {
-            console.error('Error fetching cargos:', error);
-          });
+        const docRef = firestore.collection('users').doc(userEmail);
+        const cargoList = [];
+
+        docRef.get().then((doc) => {
+          if (doc.exists) {
+            const cargoData = doc.data();
+            setCargos([cargoData]); // Assuming you want to set the data in an array
+          } else {
+            console.log('No such document!');
+          }
+        }).catch((error) => {
+          console.error('Error getting document:', error);
+        });
       }
-    }, []);
+    }, [userEmail]);
   
 
+    const [isVisible, setIsVisible] = useState(false);
 
+    const toggleVisibility = () => {
+      setIsVisible(!isVisible);
+    };
+
+    const navigation = useNavigation();
+
+    const navigateToMap = () => {
+      navigation.navigate('내비게이션');
+    };
 
     return (
-      <View>
+      <View style={{flex:1}}>
+        <ScrollView>
          <View style={styles.dayContainer}>
           <Text style={styles.dayText}>{year}년 {todayMonth}월 {todayDate}일 ({dayOfWeek})</Text>
         </View>
@@ -52,20 +64,65 @@ const MyPageScreen = ({ route }) => {
           <Text style={styles.sendText}>안녕하세요. 입항알리미입니다.</Text>
           </View>
         </View>
-        <FlatList
-        data={cargos}
-        keyExtractor={(item, index) => index.toString()} // 고유 키 설정
-        renderItem={({ item }) => (
-          <View style={styles.sendContainer2}>
+        <View>
+        {cargos.map((item, index) => (
+          <View style={styles.sendContainer2} key={index}>
             <View style={styles.inContainer}>
-            <Text style={styles.sendText}>화물 {item.cargoName} 건이 </Text>
-            <Text style={styles.sendText}>{year}년 {todayMonth}월 {todayDate}일 {item.selectedHour}시 {item.selectedTime}분</Text>
-            <Text style={styles.sendText}>도착 예약되었습니다.</Text>
-            <Text style={styles.sendText}>출발 전 출발 버튼을 눌러주세요.</Text>
+              <Text style={styles.sendText}>화물 {item.cargoName} 건이 </Text>
+              <Text style={styles.sendText}>
+                {year}년 {todayMonth}월 {todayDate}일 {item.selectedHour}시 {item.selectedTime}분
+              </Text>
+              <Text style={styles.sendText}>도착 예약되었습니다.</Text>
+              <Text style={styles.sendText}>출발 전 출발 버튼을 눌러주세요.</Text>
             </View>
           </View>
-        )}
-      />
+        ))}
+        </View>
+        {isVisible && <View style={{flex:1, flexDirection: 'row', justifyContent: 'flex-end'}}>
+          <View style={styles.replyContainer}>
+            <Text style={styles.replyText}>지금 출발합니다.</Text>
+          </View>
+        </View>
+        }
+        <View style={styles.sendContainer3}>
+          {cargos.map((item, index) => ( 
+          <View style={styles.inContainer}>
+            <Text style={styles.sendText}>{userEmail}님, 화물 {item.cargoName} 건의 </Text>
+            <Text style={styles.sendText}>최적 항만 입항 시간은 00시 00분 입니다.</Text>
+          </View>))}
+        </View>
+        <View style={styles.sendContainer3}>
+          <View style={styles.inContainer}>
+            <Text style={styles.sendText}>현재 항만 상태가 매우 혼잡하오니</Text>
+            <Text style={styles.sendText}>00분 이후 출발 하시는 것을 권고드립니다.</Text>
+          </View>
+        </View> 
+        </ScrollView>
+        <View style={styles.goContainer}>
+          <TouchableOpacity onPress={toggleVisibility} underlayColor="white">
+            <View style={styles.ingoContainer}>
+            <View style={{marginRight: 20}}>
+            <Text style={styles.goText}>지금 출발</Text>
+            </View>
+            <View>
+              <Feather name="send" size={24} color="black" />
+            </View>
+            </View>
+          </TouchableOpacity>
+          
+          
+            <View style={styles.ingoContainer}>
+            <TouchableOpacity style={{flex:1, flexDirection:'row', marginLeft: 50}} onPress={navigateToMap} underlayColor="white">
+            <View style={{marginRight: 20}}>
+            <Text style={styles.goText}>map</Text>
+            </View>
+            <View>
+              <Feather name="map-pin" size={24} color="black" />
+            </View>
+            </TouchableOpacity>
+            </View>
+          
+        </View>
       </View>
     );
   };
@@ -79,7 +136,7 @@ const MyPageScreen = ({ route }) => {
     },
     dayText: {
       fontStyle: 'bold',
-      fontSize: 20
+      fontSize: 15
     },
     sendContainer1: {
       marginTop : 30,
@@ -99,11 +156,58 @@ const MyPageScreen = ({ route }) => {
       width: 300,
       height: 120,
     },
+    sendContainer3: {
+      marginTop : 30,
+      marginLeft : 30,
+      justifyContent: 'center',
+      borderRadius: 20,
+      backgroundColor: '#D9D9D9',
+      width: 330,
+      height: 70,
+    },
     sendText: {
       fontSize: 15
     },
     inContainer: {
       marginLeft : 30,
+      marginTop : 15,
+      flex: 1,
+    },
+    goContainer: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+    },
+    goText: {
+      fontSize: 18,
+    },
+    ingoContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      margin: 8,
+      height: 50,
+      width: 180,
+      backgroundColor: '#dddddd',
+      borderRadius: 20,
+      shadowColor: '#000',
+    },
+    buttonContainer: {
+      margin: 13
+    },
+    replyContainer: {
+      backgroundColor:'#7198F4',
+      justifyContent: 'center',
+      marginTop : 30,
+      marginRight : 30,
+      height: 50,
+      width: 150,
+      borderRadius: 20,
+    },
+    replyText: {
+      color: 'white',
+      marginLeft: 20,
+      fontSize: 15
     }
   });
 
