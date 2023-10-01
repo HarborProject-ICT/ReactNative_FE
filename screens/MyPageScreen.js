@@ -5,6 +5,8 @@ import { AuthContext } from '../store/auth-context';
 import { getUserEmail, firestore } from '../firebaseConfig';
 import { Feather } from '@expo/vector-icons'; 
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MyPageScreen = ({ route }) => {
     //const { cargo } = route.params;
@@ -38,14 +40,29 @@ const MyPageScreen = ({ route }) => {
           console.error('Error getting document:', error);
         });
       }
+      AsyncStorage.getItem('isVisible').then((value) => {
+        if (value !== null) {
+          setIsVisible(value === 'true'); // 값을 불리언으로 변환합니다
+          if (!isVisible) {
+            setAdditionalMessagesVisible(true); // replyContainer가 나타나면 추가 메시지를 표시
+          }
+        }
+      });
     }, [userEmail]);
   
 
     const [isVisible, setIsVisible] = useState(false);
 
+    const [additionalMessagesVisible, setAdditionalMessagesVisible] = useState(false);
+
     const toggleVisibility = () => {
       setIsVisible(!isVisible);
+      AsyncStorage.setItem('isVisible', 'true');
+      if (!isVisible) {
+        setAdditionalMessagesVisible(true); // replyContainer가 나타나면 추가 메시지를 표시
+      }
     };
+    
 
     const navigation = useNavigation();
 
@@ -84,6 +101,8 @@ const MyPageScreen = ({ route }) => {
           </View>
         </View>
         }
+        {additionalMessagesVisible && 
+        <View>
         <View style={styles.sendContainer3}>
           {cargos.map((item, index) => ( 
           <View style={styles.inContainer}>
@@ -92,11 +111,14 @@ const MyPageScreen = ({ route }) => {
           </View>))}
         </View>
         <View style={styles.sendContainer3}>
-          <View style={styles.inContainer}>
-            <Text style={styles.sendText}>현재 항만 상태가 매우 혼잡하오니</Text>
-            <Text style={styles.sendText}>00분 이후 출발 하시는 것을 권고드립니다.</Text>
-          </View>
-        </View> 
+        <View style={styles.inContainer}>
+          <Text style={styles.sendText}>현재 항만 상태가 매우 혼잡하오니</Text>
+          <Text style={styles.sendText}>00분 이후 출발 하시는 것을 권고드립니다.</Text>
+        </View>
+      </View>
+      </View> 
+        }
+        
         </ScrollView>
         <View style={styles.goContainer}>
           <TouchableOpacity onPress={toggleVisibility} underlayColor="white">
@@ -135,7 +157,6 @@ const MyPageScreen = ({ route }) => {
       alignItems: 'center'
     },
     dayText: {
-      fontStyle: 'bold',
       fontSize: 15
     },
     sendContainer1: {
@@ -163,7 +184,7 @@ const MyPageScreen = ({ route }) => {
       borderRadius: 20,
       backgroundColor: '#D9D9D9',
       width: 330,
-      height: 70,
+      height: 65,
     },
     sendText: {
       fontSize: 15
@@ -185,7 +206,7 @@ const MyPageScreen = ({ route }) => {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      margin: 8,
+      margin: 10,
       height: 50,
       width: 180,
       backgroundColor: '#dddddd',
@@ -201,7 +222,7 @@ const MyPageScreen = ({ route }) => {
       marginTop : 30,
       marginRight : 30,
       height: 50,
-      width: 150,
+      width: 140,
       borderRadius: 20,
     },
     replyText: {

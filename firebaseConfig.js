@@ -4,18 +4,21 @@ import 'firebase/compat/firestore';
 
 import { initializeApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
+
+// Import the functions you need from the SDKs you need
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCV3eoZkgU501PcXVxJ4Jv2OJdBR5AXOPE",
-  authDomain: "testproject-a435c.firebaseapp.com",
-  databaseURL: "https://testproject-a435c-default-rtdb.firebaseio.com",
-  projectId: "testproject-a435c",
-  storageBucket: "testproject-a435c.appspot.com",
-  messagingSenderId: "517000897185",
-  appId: "1:517000897185:web:cdd0b1f5728cab72c486e0"
+  apiKey: "AIzaSyDZYrbtZ-w_0JuBxumpvITsD-aFZQ-Hmiw",
+  authDomain: "coherent-parity-399313.firebaseapp.com",
+  projectId: "coherent-parity-399313",
+  storageBucket: "coherent-parity-399313.appspot.com",
+  messagingSenderId: "117621655611",
+  appId: "1:117621655611:web:82e55da05a274c873ab41e",
+  measurementId: "G-BES7R5NK43"
 };
 
 // Initialize Firebase
@@ -51,5 +54,46 @@ export function getUserEmail() {
   return userEmail;
 }
 
-export { auth, firestore };
+function generateRandomData() {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let cargoName = '';
+  let cargoPort = '';
+  let cargoShip = '';
+
+  // 원하는 길이만큼 무작위 문자 선택
+  for (let i = 0; i < 6; i++) {
+    cargoName += characters.charAt(Math.floor(Math.random() * characters.length));
+    cargoPort += characters.charAt(Math.floor(Math.random() * characters.length));
+    cargoShip += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+
+  return { cargoName, cargoPort, cargoShip };
+}
+
+async function addRandomData() {
+  for (let i = 0; i < 10; i++) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let cargoName = '';
+    let cargoPort = '';
+    let cargoShip = '';
+
+    // 원하는 길이만큼 무작위 문자 선택
+    for (let i = 0; i < 6; i++) {
+      cargoName += characters.charAt(Math.floor(Math.random() * characters.length));
+      cargoPort += characters.charAt(Math.floor(Math.random() * characters.length));
+      cargoShip += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    // Firestore에 데이터 추가
+    await firestore.collection('cargos').doc(cargoName).add({
+      cargoName: cargoName,
+      cargoPort: cargoPort,
+      cargoShip: cargoShip
+    });
+    console.log(`Data ${i + 1} 추가됨`);
+  }
+}
+
+
+export { auth, firestore, addRandomData };
 

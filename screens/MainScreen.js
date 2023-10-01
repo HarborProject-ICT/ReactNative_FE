@@ -18,15 +18,15 @@ export default function MainScreen({ navigation }) {
             <View style={{flex: 0.4}}>
             <View style={styles.buttonContainer}>
                 <TouchableOpacity onPress={pressHandler1} underlayColor="white">
-                <View style={styles.buttonStyle}>
-                    <Text style={styles.buttonText}>로그인</Text>
+                <View style={styles.buttonStyle1}>
+                    <Text style={styles.buttonText1}>로그인</Text>
                 </View>
                 </TouchableOpacity>
             </View>
             <View style={styles.buttonContainer}>
                 <TouchableOpacity onPress={pressHandler2} underlayColor="white">
-                <View style={styles.buttonStyle}>
-                    <Text style={styles.buttonText}>회원가입</Text>
+                <View style={styles.buttonStyle2}>
+                    <Text style={styles.buttonText2}>회원가입</Text>
                 </View>
                 </TouchableOpacity>
             </View>
@@ -65,17 +65,33 @@ const styles = StyleSheet.create({
     buttonContainer: {
         margin: 10
     },
-    buttonStyle: {
+    buttonStyle1: {
         alignItems: 'center',
         justifyContent: 'center',
         width : 230,
         height: 50,
         backgroundColor: 'white',
-        borderRadius: 20,
+        borderRadius: 10,
     },
-    buttonText: {
+    buttonStyle2: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width : 230,
+        height: 50,
+        backgroundColor: '#7198F4',
+        borderColor: 'white',
+        borderRadius: 10,
+        borderStyle: 'solid',
+        borderWidth : 1
+
+    },
+    buttonText1: {
         fontSize: 20,
         color: 'gray'
+    },
+    buttonText2: {
+        fontSize: 20,
+        color: 'white'
     },
     image: {
         width: 300,

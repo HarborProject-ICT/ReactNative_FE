@@ -4,7 +4,7 @@ import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Alert } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { getUserEmail, firestore } from '../firebaseConfig';
-
+import { getLocationDuration } from '../util/location';
 
 const ReserveScreen = ({ route }) => {
 
@@ -67,6 +67,13 @@ const ReserveScreen = ({ route }) => {
     }
 
     const handleReservation = (rowIndex, columnIndex) => {
+      if(reservations[rowIndex][columnIndex]) {
+        Alert.alert('예약 불가', '예약이 완료된 시간대입니다.',[
+          {
+            text: '확인',
+          }
+        ]);
+      } else {
       const updatedReservations = [...reservations];
       updatedReservations[rowIndex] = updatedReservations[rowIndex].map((isReserved, index) => index === columnIndex);
       setReservations(updatedReservations);
@@ -99,6 +106,7 @@ const ReserveScreen = ({ route }) => {
           console.error('Error adding selected cargo to Firestore:', error);
         }
       };
+      
 
       Alert.alert('예약 확인',`${selectedHour}시 ${selectedTime}분에 예약하시겠습니까?`,[
         {
@@ -107,14 +115,26 @@ const ReserveScreen = ({ route }) => {
             // 여기서 selectedCargo 데이터를 다른 페이지로 전달할 수 있음
             navigation.goBack(),
             console.log(selectedCargoObj),
-            saveSelectedCargo(userEmail, selectedCargoObj)
+            saveSelectedCargo(userEmail, selectedCargoObj),
+            getLocationDuration()
+            .then((duration) => {
+              console.log('Duration:', duration);
+              // 여기에서 예상 소요 시간을 처리합니다.
+            })
+            .catch((error) => {
+              console.error('Error:', error);
+              // 오류 처리를 수행합니다.
+            });
           },
         },
         {text: '취소', onPress: () => navigation.goBack(),
         style: 'cancel'},
       ]);
       console.log(rowIndex+5, columnIndex*10);
+    }
     };
+
+
   
     const renderTimeSlot = (rowIndex) => {
       const hour = rowIndex + 5;
@@ -171,7 +191,7 @@ const ReserveScreen = ({ route }) => {
 const styles = StyleSheet.create({
   dayContainer: {
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   reserveContainer: {
 
@@ -205,13 +225,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'gray',
+    borderColor: 'white',
   },
   reservedSlot: {
-    backgroundColor: '#0a75ad',
+    backgroundColor: '#515151',
   },
   availableSlot: {
-    backgroundColor: '#DCDCDC',
+    backgroundColor: '#d6d6d6',
   },
   slotText: {
     color: 'white',

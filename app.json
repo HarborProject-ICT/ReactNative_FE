@@ -21,10 +21,17 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.testProject", 
+      "config": { "googleMaps": { "apiKey": "AIzaSyCGWq88-kt0FGsUd_2eMqA2PlP1MejG3qU" } }
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1fd89508-690a-4f21-8d0d-258b08e63003"
+      }
     }
   }
 }

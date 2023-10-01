@@ -12,6 +12,7 @@ import WelcomeScreen from './screens/WelcomeScreen';
 import ReserveScreen from './screens/ReserveScreen';
 import MyPageScreen from './screens/MyPageScreen';
 import MapScreen from './screens/MapScreen';
+import SocketScreen from './screens/SocketScreen';
 
 import { Colors } from './constants/styles';
 import AuthContextProvider, { AuthContext } from './store/auth-context';
@@ -20,7 +21,8 @@ import { getUserEmail } from './firebaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Text } from 'react-native';
-
+import io from 'socket.io-client';
+import * as TaskManager from 'expo-task-manager';
   
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +59,7 @@ function AuthenticatedStack() {
         contentStyle: { backgroundColor: Colors.primary100 },
       }}
     >
+
       <Stack.Screen name="화물 배정" component={WelcomeScreen} 
       options={{title: '화물 배정', 
       headerRight: ({tintColor}) => (
@@ -116,6 +119,7 @@ function Root() {
 }
 
 export default function App() {
+
   return (
     <>
       <StatusBar style="light" />

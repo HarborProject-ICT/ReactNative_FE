@@ -2,8 +2,6 @@ import axios from 'axios';
 import { auth, firestore } from '../firebaseConfig';
 
 
-const API_KEY = 'AIzaSyCV3eoZkgU501PcXVxJ4Jv2OJdBR5AXOPE'
-
 export async function createUser(email, password) {
     try {
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);

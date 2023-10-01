@@ -2,35 +2,11 @@ import axios from 'axios';
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../store/auth-context';
 
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView,  } from 'react-native';
-import { SelectList } from 'react-native-dropdown-select-list';
-import { auth } from '../firebaseConfig';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-
+import { auth, firestore, addRandomData } from '../firebaseConfig';
 
 const WelcomeScreen = () => {
-/*
-    const [fetchedMessage, setFetchedMesssage] = useState('');
-
-  const authCtx = useContext(AuthContext);
-  const token = authCtx.token;
-
-  useEffect(() => {
-    axios
-      .get(
-        'https://testproject-a435c-default-rtdb.firebaseio.com/message.json?auth=' +
-          token
-      )
-      .then((response) => {
-        setFetchedMesssage(response.data);
-      });
-  }, [token]);
-  */
-
-  
-
- 
   class Cargo {
     constructor(name, ship, port) {
       this.name = name;
@@ -39,32 +15,97 @@ const WelcomeScreen = () => {
     }
   }
 
-  const cargoList = [
-    new Cargo("P1234567", "V GLOBAL", "동원"),
-    new Cargo("CMD2482", "POLAR", "신흥사"),
-    new Cargo("DNS3436", "우진 파이오니어호", "신흥사"),
-    new Cargo("BDK7912", "GAS DEFIANCE", "동원"),
-    new Cargo("BDK7912", "GAS DEFIANCE", "동원"),
-  ];
-
+  const [cargoList, setCargoList] = useState([]);
   const navigation = useNavigation();
 
   const handleButtonPress = (cargo) => {
     navigation.navigate('화물 배정 시간 예약', { cargo })
   };
 
+  const onPressHandler = () => {
+    navigation.navigate('소켓 연결')
+  };
+
+  useEffect(()=> {
+    const cargoData = [];
+    firestore.collection('cargos')
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          cargoData.push(new Cargo(data.cargoName, data.cargoShip, data.cargoPort));
+        });
+        // Set the fetched data in the state
+        setCargoList(cargoData);
+      })
+      .catch((error) => {
+        console.error('Error fetching data from Firestore:', error);
+      });
+  },[]);
+
+  async function addRandomData() {
+    for (let i = 0; i < 10; i++) {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      const portChar = ['동원', '신흥사', '쌍용', 'kctc', '고려항만', '동방', '세방', '대한통운', '태영화학', 'CJ', '대주', '울산해상', '영인산업', '영인', '(주)글로벌'];
+      let cargoName = '';
+      let cargoPort = '';
+      let cargoShip = '';
+  
+      // 원하는 길이만큼 무작위 문자 선택
+      for (let i = 0; i < 6; i++) {
+        cargoName += characters.charAt(Math.floor(Math.random() * characters.length));
+        cargoShip += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+
+      // 랜덤한 인덱스 생성
+      const randomIndex = Math.floor(Math.random() * portChar.length);
+
+      // 랜덤한 값을 가져오기
+      cargoPort = portChar[randomIndex];
+  
+      // Firestore에 데이터 추가
+      await firestore.collection('cargos').doc(cargoName).set({
+        cargoName: cargoName,
+        cargoPort: cargoPort,
+        cargoShip: cargoShip
+      }).then(() => {
+        console.log(`Data ${i + 1} 추가됨`);
+      })
+      .catch((error) => {
+        console.error('데이터 추가 중 오류 발생:', error);
+      });
+    }
+  }
+/*
+  useEffect(() => {
+    addRandomData()
+      .then(() => {
+        console.log('데이터 생성이 완료되었습니다.');
+      })
+      .catch((error) => {
+        console.error('데이터 생성 중 오류 발생:', error);
+      });
+  },[]);
+*/
+
     return (
-        
     <ScrollView>
     <View style={styles.container}>
+    <Button
+      title="button"
+                onPress={onPressHandler}
+                color="#841584"
+              />
         {cargoList.map((cargo, index) => (
-        <View style={styles.inContainer}>
+        <View style={styles.inContainer} key={cargo.name}>
             <View style={styles.textContainer}>
-                <Text style={styles.freigtText} key={cargo.name}>{cargo.name}</Text>
-                <View style={{marginTop : 40}}>
-                    <Text style={styles.aboutfreigtText}>선박 : {cargo.ship}</Text>
-                    <Text style={styles.aboutfreigtText}>하역사 : {cargo.port}</Text>
-                </View>
+              <View style={styles.freigtContainer}>
+                <Text style={styles.freigtText}>{cargo.name}</Text>
+              </View>
+              <View style={styles.aboutfreigtContainer}>
+                <Text style={styles.aboutfreigtText}>{cargo.ship}</Text>
+                <Text style={styles.aboutfreigtText}>{cargo.port}</Text>
+              </View>
             </View>
             <TouchableOpacity key={index}
             onPress={() => handleButtonPress(cargo)} underlayColor="white">
@@ -87,45 +128,57 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    text: {
-        fontWeight: 'bold',
-        fontSize: 30,
-        textAlign: 'center'
+    text: { 
+        fontSize: 27,
+        textAlign: 'center',
+        alignItems : 'center'
     },
     inContainer: {
         flex: 1,
         marginTop: 30,
         width : 340,
-        height : 150,
-        borderWidth : 2,
-        borderColor: '#0a75ad',
+        height : 80,
+        backgroundColor: '#d6d6d6',
+        borderRadius: 5,
         flexDirection: 'row'
     },
     textContainer: {
-        width : 260,
-        margin : 10
+        flex:1,
+        flexDirection: 'row'
     },
     buttonContainer: {
-        backgroundColor: '#DCDCDC',
+        backgroundColor: 'white',
         height : 30,
         width : 50,
         alignItems: 'center',
         justifyContent : 'center',
-        marginTop : 110,
+        marginTop : 30,
+        marginRight : 10,
+        borderRadius : 5
+    },
+    freigtContainer: {
+      flex : 0.4,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft : 10
+    },
+    aboutfreigtContainer: {
+      flex : 0.6,
+      alignItems: 'center',
+      justifyContent: 'center'
     },
     buttonText: {
         fontSize: 15,
-        color: 'white'
+        color: 'gray'
     },
     freigtText: {
-        fontSize : 25,
-        color: 'black',
-        fontStyle : 'bold'
+        fontSize : 20,
+        color: '#7198F4',
+        fontWeight : 'bold',
     },
     aboutfreigtText: {
-        color: '#63ace5',
-        fontSize : 20,
-        fontStyle : 'bold',
+        color: 'black',
+        fontSize : 17,
     }
 });
 
