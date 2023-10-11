@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../store/auth-context';
-
+import LoadingOverlay from '../components/ui/LoadingOverlay';
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { auth, firestore, addRandomData } from '../firebaseConfig';
@@ -15,7 +15,16 @@ const WelcomeScreen = () => {
     }
   }
 
+  const INITIAL_ITEM_COUNT = 30; // 초기에 표시할 항목 개수
+  const LOAD_MORE_COUNT = 30; // 한 번에 로드할 항목 개수
+
   const [cargoList, setCargoList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [visibleItems, setVisibleItems] = useState([]);
+  const [totalItems, setTotalItems] = useState(cargoList.length);
+  const [loadMoreCount, setLoadMoreCount] = useState(INITIAL_ITEM_COUNT);
+
   const navigation = useNavigation();
 
   const handleButtonPress = (cargo) => {
@@ -24,6 +33,14 @@ const WelcomeScreen = () => {
 
   const onPressHandler = () => {
     navigation.navigate('소켓 연결')
+  };
+
+  const handleLoadMore = () => {
+    if (loadMoreCount + LOAD_MORE_COUNT <= totalItems) {
+      const newLoadMoreCount = loadMoreCount + LOAD_MORE_COUNT;
+      setVisibleItems(cargoList.slice(0, newLoadMoreCount));
+      setLoadMoreCount(newLoadMoreCount);
+    }
   };
 
   useEffect(()=> {
@@ -37,66 +54,24 @@ const WelcomeScreen = () => {
         });
         // Set the fetched data in the state
         setCargoList(cargoData);
+        setLoading(false);
       })
       .catch((error) => {
         console.error('Error fetching data from Firestore:', error);
+        setLoading(false);
       });
+
+    setVisibleItems(cargoList.slice(0, loadMoreCount));
   },[]);
 
-  async function addRandomData() {
-    for (let i = 0; i < 10; i++) {
-      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      const portChar = ['동원', '신흥사', '쌍용', 'kctc', '고려항만', '동방', '세방', '대한통운', '태영화학', 'CJ', '대주', '울산해상', '영인산업', '영인', '(주)글로벌'];
-      let cargoName = '';
-      let cargoPort = '';
-      let cargoShip = '';
-  
-      // 원하는 길이만큼 무작위 문자 선택
-      for (let i = 0; i < 6; i++) {
-        cargoName += characters.charAt(Math.floor(Math.random() * characters.length));
-        cargoShip += characters.charAt(Math.floor(Math.random() * characters.length));
-      }
-
-      // 랜덤한 인덱스 생성
-      const randomIndex = Math.floor(Math.random() * portChar.length);
-
-      // 랜덤한 값을 가져오기
-      cargoPort = portChar[randomIndex];
-  
-      // Firestore에 데이터 추가
-      await firestore.collection('cargos').doc(cargoName).set({
-        cargoName: cargoName,
-        cargoPort: cargoPort,
-        cargoShip: cargoShip
-      }).then(() => {
-        console.log(`Data ${i + 1} 추가됨`);
-      })
-      .catch((error) => {
-        console.error('데이터 추가 중 오류 발생:', error);
-      });
-    }
+  if (loading) {
+    return <LoadingOverlay message="화물 배정중..." />;
   }
-/*
-  useEffect(() => {
-    addRandomData()
-      .then(() => {
-        console.log('데이터 생성이 완료되었습니다.');
-      })
-      .catch((error) => {
-        console.error('데이터 생성 중 오류 발생:', error);
-      });
-  },[]);
-*/
-
+  else {
     return (
     <ScrollView>
     <View style={styles.container}>
-    <Button
-      title="button"
-                onPress={onPressHandler}
-                color="#841584"
-              />
-        {cargoList.map((cargo, index) => (
+        {visibleItems.map((cargo, index) => (
         <View style={styles.inContainer} key={cargo.name}>
             <View style={styles.textContainer}>
               <View style={styles.freigtContainer}>
@@ -115,9 +90,17 @@ const WelcomeScreen = () => {
             </TouchableOpacity>
         </View>
         ))} 
+        {loadMoreCount < totalItems && ( //30개씩 나오게 하는 코드.. 없애두됨
+        <TouchableOpacity onPress={handleLoadMore}>
+          <View style={styles.loadMoreButton}>
+            <Text style={styles.loadMoreText}>더 보기</Text>
+          </View>
+        </TouchableOpacity>
+        )}
     </View>
-    </ScrollView>
+  </ScrollView>
     );
+  }
 };
 
 
@@ -179,6 +162,18 @@ const styles = StyleSheet.create({
     aboutfreigtText: {
         color: 'black',
         fontSize : 17,
+    },
+    loadMoreButton: {
+      marginTop: 30,
+      width : 340,
+      height : 80,
+      backgroundColor: '#d6d6d6',
+      borderRadius: 5,
+      flexDirection: 'row'
+    },
+    loadMoreText: {
+      flex:1,
+      flexDirection: 'row'
     }
 });
 

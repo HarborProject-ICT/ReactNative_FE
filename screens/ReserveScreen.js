@@ -29,83 +29,106 @@ const ReserveScreen = ({ route }) => {
     const week = ['일', '월', '화', '수', '목', '금', '토'];
     var dayOfWeek = week[now.getDay()];
 
+    const userEmail = getUserEmail();
 
     const [reservations, setReservations] = useState(Array(20).fill(Array(6).fill(false)));
+    const [longtermlist, setLongtermlist] = useState(Array(108).fill(0));
+
 
     useEffect(() => {
-      loadReservations();
-    }, []);
-
-    useEffect(() => {
-      saveReservations();
-    }, [reservations]);
-
-    const userEmail = getUserEmail();
+      const fetchData = async () => {
+        const longtermlistData = await getLongtermlist();
+        setLongtermlist(longtermlistData);
+      };
     
-    const loadReservations = async () => {
+      fetchData();
+    }, []);
+    
+    useEffect(() => {
+      updateReservations();
+    }, [longtermlist]);
+    
+    const updateReservations = () => {
+      const updatedReservations = Array(20).fill().map(() => Array(6).fill(false));
+    
+      for (let i = 0; i < longtermlist.length; i++) {
+        if (longtermlist[i] === 0) {
+          const hour = Math.floor(i / 6);
+          const min = i % 6;
+    
+          // Set reservations[hour][min] to true in the updated array
+          updatedReservations[hour][min] = true;
+        }
+      }
+    
+      // Update the state with the new array
+      setReservations(updatedReservations);
+    }; // Use a useEffect Hook to execute this side effect
+    
+    const getLongtermlist = async () => {
       try {
-        const storedReservations = await AsyncStorage.getItem('reservations');
-        if (storedReservations) {
-          setReservations(JSON.parse(storedReservations));
+        const cityRef = firestore.collection('longtermlist').doc('mG0bZ5sgSx0XkuhYwZlq');
+        const doc = await cityRef.get();
+        if (!doc.exists) {
+          console.log('No such document!');
+          return [];
+        } else {
+          console.log('Document data:', doc.data().longtermlist);
+          return doc.data().longtermlist;
         }
       } catch (error) {
-        console.error('Error loading reservations:', error);
+        console.error('Error getting longtermlist:', error);
+        return [];
       }
     };
-  
-    const saveReservations = async () => {
-      try {
-        await AsyncStorage.setItem('reservations', JSON.stringify(reservations));
-      } catch (error) {
-        console.error('Error saving reservations:', error);
-      }
-    };
-
-    
-    const selectHandler = () => {
-      navigation.goBack();
-    }
 
     const handleReservation = (rowIndex, columnIndex) => {
-      if(reservations[rowIndex][columnIndex]) {
+      const index = rowIndex*6 + columnIndex;
+      if(longtermlist[index] == 0) {
         Alert.alert('예약 불가', '예약이 완료된 시간대입니다.',[
           {
             text: '확인',
           }
         ]);
       } else {
-      const updatedReservations = [...reservations];
-      updatedReservations[rowIndex] = updatedReservations[rowIndex].map((isReserved, index) => index === columnIndex);
-      setReservations(updatedReservations);
+        const selectedHour = `${rowIndex + 5}`;
+        const selectedTime = `${columnIndex * 10}`;
 
-      const selectedHour = `${rowIndex + 5}`;
-      const selectedTime = `${columnIndex * 10}`;
+        const selectedCargoObj = new selectedCargo(
+          cargo.name,
+          cargo.ship,
+          cargo.port,
+          selectedHour,
+          selectedTime,
+        );    
+        
+        //firestore에 선택한 화물 정보 저장
+        const saveSelectedCargo = async (userEmail, selectedCargoObj) => {
+          try {
+            // userEmail을 사용하여 해당 사용자의 컬렉션에 데이터를 추가
+            await firestore.collection('users').doc(userEmail).update({
+              cargoName: selectedCargoObj.name,
+              cargoPort: selectedCargoObj.port,
+              cargoShip: selectedCargoObj.ship,
+              selectedHour: selectedCargoObj.hour,
+              selectedTime: selectedCargoObj.time,
+            });
+            
+            console.log('Selected cargo added to Firestore successfully');
+          } catch (error) {
+            console.error('Error adding selected cargo to Firestore:', error);
+          }
+        };
 
-      const selectedCargoObj = new selectedCargo(
-        cargo.name,
-        cargo.ship,
-        cargo.port,
-        selectedHour,
-        selectedTime,
-      );    
-      
-       //firestore에 선택한 화물 정보 저장
-       const saveSelectedCargo = async (userEmail, selectedCargoObj) => {
-        try {
-          // userEmail을 사용하여 해당 사용자의 컬렉션에 데이터를 추가
-          await firestore.collection('users').doc(userEmail).update({
-            cargoName: selectedCargoObj.name,
-            cargoPort: selectedCargoObj.port,
-            cargoShip: selectedCargoObj.ship,
-            selectedHour: selectedCargoObj.hour,
-            selectedTime: selectedCargoObj.time,
-          });
-          
-          console.log('Selected cargo added to Firestore successfully');
-        } catch (error) {
-          console.error('Error adding selected cargo to Firestore:', error);
-        }
-      };
+        const deleteFromCargo = async (selectedCargoObj) => {
+          try {
+            const cargoName = selectedCargoObj.name;
+            await firestore.collection('cargos').doc(cargoName).delete();
+            console.log('Selected cargo deleted from Firestore successfully');
+          } catch (error) {
+            console.error('Error deleteting selected cargo from Firestore:', error);
+          }
+        };
       
 
       Alert.alert('예약 확인',`${selectedHour}시 ${selectedTime}분에 예약하시겠습니까?`,[
@@ -116,27 +139,34 @@ const ReserveScreen = ({ route }) => {
             navigation.goBack(),
             console.log(selectedCargoObj),
             saveSelectedCargo(userEmail, selectedCargoObj),
-            getLocationDuration()
-            .then((duration) => {
-              console.log('Duration:', duration);
-              // 여기에서 예상 소요 시간을 처리합니다.
-            })
-            .catch((error) => {
-              console.error('Error:', error);
-              // 오류 처리를 수행합니다.
-            });
+            deleteFromCargo(selectedCargoObj)
+            const updatedLongtermlist = [...longtermlist];
+
+            // Decrement the value at the specified index
+            updatedLongtermlist[index]--;
+
+            console.log("updatedLongtermlist"+updatedLongtermlist);
+
+            setLongtermlist(updatedLongtermlist);
+
+            const cityRef = firestore.collection('longtermlist').doc('mG0bZ5sgSx0XkuhYwZlq');
+              cityRef.update({ longtermlist: updatedLongtermlist })
+                .then(() => {
+                  console.log('Updated longtermlist in Firestore successfully');
+                })
+                .catch((error) => {
+                  console.error('Error updating longtermlist in Firestore:', error);
+                });
           },
         },
-        {text: '취소', onPress: () => navigation.goBack(),
+        {text: '취소', onPress: () => navigation.navigate('화물 배정'),
         style: 'cancel'},
       ]);
       console.log(rowIndex+5, columnIndex*10);
     }
-    };
+  };
 
-
-  
-    const renderTimeSlot = (rowIndex) => {
+  const renderTimeSlot = (rowIndex) => {
       const hour = rowIndex + 5;
     
     return (
@@ -162,7 +192,6 @@ const ReserveScreen = ({ route }) => {
         <View style={styles.dayContainer}>
           <Text style={styles.dayText}>{year}년 {todayMonth}월 {todayDate}일 ({dayOfWeek})</Text>
         </View>
-        <ScrollView>
         <View style={styles.timeHeader}>
           <Text style={styles.timeLabel}>시</Text>
           {Array(6).fill().map((_, index) => (
@@ -171,8 +200,7 @@ const ReserveScreen = ({ route }) => {
             </Text>
           ))}
         </View>
-        {Array(20).fill().map((_, index) => renderTimeSlot(index))}
-        </ScrollView>
+        {Array(18).fill().map((_, index) => renderTimeSlot(index))}
       </View>
     );
   };
@@ -190,6 +218,7 @@ const ReserveScreen = ({ route }) => {
 
 const styles = StyleSheet.create({
   dayContainer: {
+    marginTop: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -197,8 +226,8 @@ const styles = StyleSheet.create({
 
   },
   dayText: {
-    fontStyle: 'bold',
-    fontSize: 20
+    fontWeight: 'bold',
+    fontSize: 25
   },
   container: {
     flex: 1,
@@ -207,7 +236,7 @@ const styles = StyleSheet.create({
   },
   timeHeader: {
     flexDirection: 'row',
-    marginTop: 10,
+    marginTop: 40,
     marginBottom: 10,
     alignItems: 'center',
   },

@@ -12,7 +12,6 @@ import WelcomeScreen from './screens/WelcomeScreen';
 import ReserveScreen from './screens/ReserveScreen';
 import MyPageScreen from './screens/MyPageScreen';
 import MapScreen from './screens/MapScreen';
-import SocketScreen from './screens/SocketScreen';
 
 import { Colors } from './constants/styles';
 import AuthContextProvider, { AuthContext } from './store/auth-context';

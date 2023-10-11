@@ -75,7 +75,51 @@ useEffect(() => {(async () => {
      
   })();
 }, []);
+// Haversine 공식을 사용하여 두 지점 간의 거리 계산
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // 지구 반경 (킬로미터)
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // 거리 (킬로미터)
+  return distance;
+}
 
+const locationUpdateInterval = 60000; // 1분(밀리초 단위)
+setInterval(() => {
+  // 위치 업데이트 로직을 여기에 구현
+  let currentLocation = Location.getCurrentPositionAsync({});
+  setLocation(currentLocation);
+
+  if (location && location.coords) {
+    // 위치 정보 사용
+    const currentLatitude = location.coords.latitude;
+    const currentLongitude = location.coords.longitude;
+    // 나머지 로직
+    const currentDistance = calculateDistance(
+      currentLocation.coords.latitude,
+      currentLocation.coords.longitude,
+      37.50762367279604,
+      127.0138510801213
+    );
+  
+    const alertDistance = 0.1; // 예시: 100 미터 이내로 가까워지면 알림 표시
+    if (currentDistance <= alertDistance) {
+      navigation.navigate('마이페이지');
+    } else {
+      console.log('Error: Location information is missing');
+    }
+  } else {
+    console.log('error');
+  }
+  
+}, locationUpdateInterval);
 
 
 let text = 'Waiting..';
@@ -83,8 +127,7 @@ let text = 'Waiting..';
 if (errorMsg) {
   text = errorMsg;
 } else if (location) {
-  const currentLatitude = location.coords.latitude;
-  const currentLongitude = location.coords.longitude;
+
 }
 
 

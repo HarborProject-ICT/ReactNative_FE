@@ -27,7 +27,7 @@ function LoginScreen() {
   }
 
   if (isAuthenticating) {
-    return <LoadingOverlay message="Logging you in..." />;
+    return <LoadingOverlay message="로그인 중..." />;
   }
 
   return <AuthContent isLogin onAuthenticate={loginHandler} />;
